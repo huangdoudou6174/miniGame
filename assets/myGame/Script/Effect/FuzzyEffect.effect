@@ -1,0 +1,132 @@
+// Copyright (c) 2017-2018 Xiamen Yaji Software Co., Ltd.  
+
+CCEffect %{
+  techniques:
+  - passes:
+    - vert: vs:vert
+      frag: fs:frag
+      depthStencilState:
+        depthTest: true
+        depthWrite: false
+      blendState:
+        targets:
+        - blend: true
+          blendSrc: src_alpha
+          blendDst: one_minus_src_alpha
+          blendDstAlpha: one_minus_src_alpha
+      rasterizerState:
+        cullMode: back
+      properties:
+        texture: { value: white }
+        alphaThreshold: { value: 0.5 }
+        textureWidth: { value: 40 }
+        fuzzyCount: { value: 5 }
+        time: { value: 0 }
+}%
+
+
+CCProgram vs %{
+  precision highp float;
+
+  #include <cc-global>
+  #include <cc-local>
+
+  in vec3 a_position;
+  in vec4 a_color;
+  out vec4 v_color;
+
+  #if USE_TEXTURE
+  in vec2 a_uv0;
+  out vec2 v_uv0;
+  #endif
+
+  uniform timeOffset{
+    float time;
+  };
+
+  vec4 vert () {
+    vec4 pos = vec4(a_position, 1);
+
+    pos = cc_matViewProj * cc_matWorld * pos;
+
+    #if USE_TEXTURE
+    v_uv0 = a_uv0;
+    #endif
+    // v_uv0.x = 0.05;
+
+    // highp float x = 0.5 + v_uv0.x;
+    // if(x>=1.0){
+    //   x -= 1.0;
+    // }
+    // v_uv0.x = x;
+    // v_uv0.x = 0.0;
+    // v_uv0.x += time;
+
+    // v_uv0.x = 1.05;
+    // v_uv0.y = ;
+    
+    // v_color = a_color;
+
+    return pos;
+  }
+}%
+
+
+CCProgram fs %{
+  precision highp float;
+  
+  #include <alpha-test>
+  #include <cc-global>
+
+  in vec4 v_color;
+
+  #if USE_TEXTURE
+  in vec2 v_uv0;
+  uniform sampler2D texture;
+  #endif
+
+  uniform timeOffset{
+     float time;
+  };
+  uniform fuzzy {
+    float textureWidth;
+    float fuzzyCount;
+  };
+
+  vec4 frag () {
+    vec2 uv = v_uv0;
+    if(time + uv.x < 0.0){
+      discard;
+    }
+    uv.x = fract(time + uv.x);
+
+    vec4 o = vec4(1, 1, 1, 1);
+    #if USE_TEXTURE
+    o *= texture(texture, uv);
+      // #if CC_USE_ALPHA_ATLAS_TEXTURE
+      // o.a *= texture2D(texture, v_uv0 + vec2(0, 0.5)).r;
+      // #endif
+      if(fuzzyCount > 0.0){
+      vec4 c = vec4(0,0,0,0);
+      float count = 0.0;
+      float wInv = 1.0 / textureWidth;
+      if(uv.x < wInv * fuzzyCount){
+        uv.x = wInv * fuzzyCount;
+      }
+      for(int i=0;i<100;++i){
+        if(count > fuzzyCount){
+          break;
+        }
+        c += texture(texture,uv);
+        uv.x -= wInv;
+        count += 1.0;
+      }
+      c /= fuzzyCount;
+      ALPHA_TEST(c);
+      c.a *=2.0;
+      return c;
+      }
+    #endif
+    return o;
+  }
+}%

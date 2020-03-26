@@ -1,0 +1,29 @@
+{
+  "__type__": "cc.Material",
+  "_name": "Player",
+  "_objFlags": 0,
+  "_native": "",
+  "_effectAsset": {
+    "__uuid__": "abc2cb62-7852-4525-a90d-d474487b88f2"
+  },
+  "_techniqueIndex": 0,
+  "_techniqueData": {
+    "0": {
+      "defines": {
+        "USE_DIFFUSE_TEXTURE": true
+      },
+      "props": {
+        "diffuseColor": {
+          "__type__": "cc.Color",
+          "r": 255,
+          "g": 255,
+          "b": 255,
+          "a": 255
+        },
+        "diffuseTexture": {
+          "__uuid__": "6eaa2c08-07e2-4e8e-8aa8-aa6525703897"
+        }
+      }
+    }
+  }
+}
